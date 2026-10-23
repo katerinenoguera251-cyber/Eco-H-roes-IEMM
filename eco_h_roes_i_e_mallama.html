@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Eco-Héroes I.E. Mallama</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap');
+        
+        body {
+            font-family: 'Fredoka', cursive, sans-serif;
+            background-color: #0f172a;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+
+        .phone-frame {
+            width: 100%;
+            max-width: 420px;
+            height: 100vh;
+            max-height: 880px;
+            border-radius: 36px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 12px #1e293b;
+            overflow: hidden;
+            position: relative;
+            background: linear-gradient(180deg, #38bdf8 0%, #818cf8 100%);
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-8px) rotate(2deg); }
+        }
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse-subtle {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        .animate-pulse-subtle {
+            animation: pulse-subtle 2s ease-in-out infinite;
+        }
+
+        canvas {
+            display: block;
+            touch-action: none;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-0 sm:p-4">
+
+    <div class="phone-frame flex flex-col justify-between relative overflow-hidden">
+
+        <!-- Encabezado / Barra Superior -->
+        <div class="bg-emerald-600 text-white px-3 pt-3 pb-2 shadow-md z-20 flex justify-between items-center rounded-b-2xl border-b border-emerald-500">
+            <div class="flex items-center space-x-2.5">
+                <!-- Escudo de la Institución Educativa Mallama -->
+                <div class="bg-white p-1 rounded-xl shadow-md flex items-center justify-center shrink-0 border border-emerald-200">
+                    <img src="input_file_0.png" alt="Escudo I.E. Mallama" class="w-10 h-11 object-contain rounded-md drop-shadow-sm" onerror="this.onerror=null; this.src='https://placehold.co/80x100/10b981/ffffff?text=IEM';">
+                </div>
+                <div>
+                    <h1 class="text-xs font-black leading-tight tracking-wide text-amber-300">I.E. MALLAMA</h1>
+                    <p class="text-[10px] text-emerald-100 font-semibold flex items-center gap-1">
+                        <span>Eco-Héroes Nariño</span> 🌿
+                    </p>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-2">
+                <div class="bg-amber-400 text-amber-950 px-2.5 py-1 rounded-full text-xs font-bold flex items-center shadow">
+                    <i class="fa-solid fa-star text-amber-100 mr-1 animate-spin" style="animation-duration: 8s;"></i>
+                    <span id="score-display">0</span>
+                </div>
+                <button id="btn-sound" onclick="toggleAudio()" class="text-white bg-emerald-700 hover:bg-emerald-800 p-1.5 rounded-full text-xs transition">
+                    <i class="fa-solid fa-volume-high" id="sound-icon"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- CONTENEDOR DE PANTALLAS -->
+        <div id="app-content" class="flex-1 relative overflow-y-auto no-scrollbar flex flex-col">
+            
+            <!-- VISTA INICIO -->
+            <div id="view-home" class="view-screen p-4 flex flex-col items-center justify-between min-h-full">
+                <div class="text-center mt-2">
+                    <span class="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-sm">
+                        ¡Cuidemos nuestro colegio!
+                    </span>
+                    <h2 class="text-2xl font-black text-white drop-shadow-md mt-2 leading-tight">
+                        Aventura Verde en Mallama
+                    </h2>
+                    <p class="text-xs text-white/90 font-medium mt-1 px-4">
+                        ¡Clasifica sin equivocarte! Si fallas una caneca, el juego se reiniciará.
+                    </p>
+                </div>
+
+                <!-- Contenedor central con avatar animado en canvas -->
+                <div class="relative my-3 w-full flex justify-center items-center">
+                    <div class="w-44 h-44 bg-white/20 rounded-full absolute animate-ping opacity-25"></div>
+                    <div class="w-40 h-40 bg-emerald-400/30 rounded-full flex items-center justify-center backdrop-blur-sm border-2 border-white/40 shadow-xl overflow-hidden">
+                        <canvas id="hero-canvas" width="150" height="150" class="rounded-full"></canvas>
+                    </div>
+                </div>
+
+                <div class="w-full space-y-2 mb-2">
+                    <button onclick="switchView('game')" class="w-full bg-amber-400 hover:bg-amber-300 text-amber-950 font-extrabold py-3 px-4 rounded-2xl shadow-lg border-b-4 border-amber-600 flex items-center justify-center space-x-2 text-base transform active:scale-95 transition animate-pulse-subtle">
+                        <i class="fa-solid fa-gamepad text-xl"></i>
+                        <span>¡JUGAR CERO BASURA!</span>
+                    </button>
+
+                    <button onclick="switchView('guide')" class="w-full bg-white hover:bg-slate-50 text-slate-800 font-bold py-2.5 px-4 rounded-2xl shadow-md border-b-4 border-slate-300 flex items-center justify-center space-x-2 text-xs transform active:scale-95 transition">
+                        <i class="fa-solid fa-dumpster text-emerald-600 text-base"></i>
+                        <span>Guía Completa de Canecas</span>
+                    </button>
+
+                    <button onclick="switchView('ai')" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 px-4 rounded-2xl shadow-md border-b-4 border-indigo-800 flex items-center justify-center space-x-2 text-xs transform active:scale-95 transition">
+                        <i class="fa-solid fa-robot text-amber-300 text-base"></i>
+                        <span>Pregunta al Profe Eco-Bot (IA)</span>
+                    </button>
+
+                    <button onclick="switchView('creators')" class="w-full bg-pink-500 hover:bg-pink-400 text-white font-bold py-2.5 px-4 rounded-2xl shadow-md border-b-4 border-pink-700 flex items-center justify-center space-x-2 text-xs transform active:scale-95 transition">
+                        <i class="fa-solid fa-heart text-amber-200 text-base"></i>
+                        <span>Equipo Creador (Eco-Héroes)</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- VISTA JUEGO -->
+            <div id="view-game" class="view-screen hidden p-3 flex-col h-full justify-between">
+                <div class="bg-white/90 backdrop-blur rounded-xl p-2 shadow-sm flex justify-between items-center text-xs font-bold text-slate-700">
+                    <div class="flex items-center space-x-1">
+                        <i class="fa-solid fa-bullseye text-red-500"></i>
+                        <span>Aciertos: <span id="game-score" class="text-emerald-600">0/10</span></span>
+                    </div>
+                    <div id="game-instruction" class="text-center font-extrabold text-indigo-900">
+                        ¡Atención: Un error reinicia la partida!
+                    </div>
+                    <div class="flex items-center space-x-1">
+                        <i class="fa-solid fa-clock text-amber-500"></i>
+                        <span id="game-timer">60s</span>
+                    </div>
+                </div>
+
+                <div class="relative my-2 flex-1 rounded-2xl overflow-hidden border-2 border-white/60 shadow-inner bg-sky-200">
+                    <canvas id="game-canvas" class="w-full h-full"></canvas>
+                    
+                    <div id="game-feedback" class="absolute inset-0 pointer-events-none flex items-center justify-center opacity-0 transition-opacity duration-300">
+                        <span id="feedback-text" class="text-2xl font-black text-white px-4 py-2 rounded-2xl shadow-2xl transform scale-75"></span>
+                    </div>
+                </div>
+
+                <div class="bg-white/80 backdrop-blur p-2 rounded-xl text-center text-[11px] text-slate-700 font-medium">
+                    ⚠️ <span class="font-bold text-rose-700">Regla de oro:</span> Cada objeto es único en la ronda. ¡Un fallo reinicia el juego!
+                </div>
+            </div>
+
+            <!-- VISTA GUÍA DE CANECAS -->
+            <div id="view-guide" class="view-screen hidden p-4 flex-col space-y-4">
+                <div class="text-center">
+                    <h3 class="text-xl font-extrabold text-white">Código de Colores (Res. 2184)</h3>
+                    <p class="text-xs text-white/80">Guía de separación con imágenes ilustrativas</p>
+                </div>
+
+                <!-- Imagen destacada temática -->
+                <div class="rounded-2xl overflow-hidden shadow-md h-28 relative">
+                    <img src="https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?auto=format&fit=crop&w=600&q=80" alt="Reciclaje y separación" class="w-full h-full object-cover">
+                    <div class="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent flex items-end p-2.5">
+                        <span class="text-white text-xs font-bold">¡Separar bien es cuidar a Mallama!</span>
+                    </div>
+                </div>
+
+                <!-- Caneca Blanca -->
+                <div class="bg-white rounded-2xl p-3 shadow-lg border-l-8 border-slate-300 flex items-start space-x-3">
+                    <div class="w-12 h-16 bg-slate-100 border-2 border-slate-300 rounded-lg flex flex-col items-center justify-center text-slate-600 shadow-inner shrink-0 overflow-hidden relative">
+                        <img src="https://images.unsplash.com/photo-1588854337221-4cf9fa96059c?auto=format&fit=crop&w=100&q=80" alt="Residuos blancos" class="absolute inset-0 w-full h-full object-cover opacity-30">
+                        <i class="fa-solid fa-recycle text-xl z-10"></i>
+                        <span class="text-[9px] font-black mt-1 z-10">BLANCO</span>
+                    </div>
+                    <div class="text-xs space-y-1">
+                        <h4 class="font-bold text-slate-800 text-sm">Residuos Aprovechables</h4>
+                        <p class="text-slate-600 leading-tight">
+                            • Carpetas, folders y papel de archivo seco.<br>
+                            • Grapas, clips y objetos de metal.<br>
+                            • Tapas plásticas y botellas de plástico/vidrio (sin residuo).<br>
+                            • Lápices de madera, cajas de cartón limpias, cables y CD/DVD.
+                        </p>
+                        <span class="inline-block bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded">
+                            ✔ Deben estar limpios y completamente secos
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Caneca Verde -->
+                <div class="bg-white rounded-2xl p-3 shadow-lg border-l-8 border-emerald-500 flex items-start space-x-3">
+                    <div class="w-12 h-16 bg-emerald-500 rounded-lg flex flex-col items-center justify-center text-white shadow-inner shrink-0 overflow-hidden relative">
+                        <img src="https://images.unsplash.com/photo-1615811361523-6bd03d7748e7?auto=format&fit=crop&w=100&q=80" alt="Residuos verdes" class="absolute inset-0 w-full h-full object-cover opacity-30">
+                        <i class="fa-solid fa-apple-whole text-xl z-10"></i>
+                        <span class="text-[9px] font-black mt-1 z-10">VERDE</span>
+                    </div>
+                    <div class="text-xs space-y-1">
+                        <h4 class="font-bold text-slate-800 text-sm">Orgánicos Aprovechables</h4>
+                        <p class="text-slate-600 leading-tight">
+                            • Cáscaras de frutas, semillas y restos de café o yerba.<br>
+                            • Bolsitas de infusiones o té.<br>
+                            • Cáscaras de huevo.<br>
+                            • Pasto verde, hojas secas y restos de jardín escolar.
+                        </p>
+                        <span class="inline-block bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded">
+                            🌱 ¡Material perfecto para la Compostera!
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Caneca Negra -->
+                <div class="bg-white rounded-2xl p-3 shadow-lg border-l-8 border-slate-800 flex items-start space-x-3">
+                    <div class="w-12 h-16 bg-slate-800 rounded-lg flex flex-col items-center justify-center text-white shadow-inner shrink-0 overflow-hidden relative">
+                        <img src="https://images.unsplash.com/photo-1530587191325-3db32d826c18?auto=format&fit=crop&w=100&q=80" alt="Residuos negros" class="absolute inset-0 w-full h-full object-cover opacity-30">
+                        <i class="fa-solid fa-trash-can text-xl z-10"></i>
+                        <span class="text-[9px] font-black mt-1 z-10">NEGRO</span>
+                    </div>
+                    <div class="text-xs space-y-1">
+                        <h4 class="font-bold text-slate-800 text-sm">No Aprovechables</h4>
+                        <p class="text-slate-600 leading-tight">
+                            • Servilletas usadas, papel higiénico y residuos de baño.<br>
+                            • Papeles/cartón con grasa (cajas de pizza sucias).<br>
+                            • Mezcladores de café y cubiertos desechables usados.<br>
+                            • Recipientes de icopor, paquetes de mecatos, esferos y colillas.
+                        </p>
+                        <span class="inline-block bg-rose-100 text-rose-800 text-[10px] font-bold px-2 py-0.5 rounded">
+                            ⚠️ Van al relleno sanitario
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Posconsumo e Imagen adicional -->
+                <div class="bg-amber-100 rounded-2xl p-3 shadow-md border-2 border-amber-300 text-xs">
+                    <div class="flex items-center space-x-2 font-bold text-amber-900 mb-1">
+                        <i class="fa-solid fa-battery-quarter text-lg text-amber-600"></i>
+                        <span>Programas Posconsumo (Especiales)</span>
+                    </div>
+                    <p class="text-amber-800 leading-tight mb-2">
+                        • <strong>Pilas con el Ambiente:</strong> Pilas viejas dentro de botellas plásticas.<br>
+                        • <strong>Punto Azul:</strong> Medicamentos vencidos o parcialmente consumidos.<br>
+                        • <strong>Lúmina / RAEE:</strong> Bombillos, electrodomésticos viejos y cables dañados.
+                    </p>
+                    <div class="rounded-xl overflow-hidden h-20 shadow-inner">
+                        <img src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=500&q=80" alt="Tecnología e Insumos" class="w-full h-full object-cover">
+                    </div>
+                </div>
+            </div>
+
+            <!-- VISTA CHATBOT IA -->
+            <div id="view-ai" class="view-screen hidden p-3 flex-col h-full justify-between">
+                <div class="bg-indigo-700 text-white p-3 rounded-2xl shadow flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-amber-400 rounded-full flex items-center justify-center text-indigo-950 font-black text-lg border-2 border-white shadow">
+                        🤖
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-sm leading-none">Profe Eco-Bot Mallama</h3>
+                        <p class="text-[10px] text-indigo-200 mt-0.5">Consulta la cesta exacta para cada residuo</p>
+                    </div>
+                </div>
+
+                <div id="chat-history" class="flex-1 my-2 overflow-y-auto space-y-2.5 p-2 bg-white/40 rounded-2xl backdrop-blur border border-white/40 text-xs">
+                    <div class="flex items-start space-x-2">
+                        <div class="w-7 h-7 bg-indigo-600 text-white rounded-full flex items-center justify-center text-xs shrink-0 mt-1">
+                            🤖
+                        </div>
+                        <div class="bg-white p-3 rounded-2xl rounded-tl-none shadow-sm text-slate-800 max-w-[85%]">
+                            ¡Hola, estudiante de la I.E. Mallama! 👋 Pregúntame dónde va cualquier residuo para no fallar en el juego.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botones Rápidos -->
+                <div class="flex gap-1.5 overflow-x-auto pb-2 no-scrollbar">
+                    <button onclick="askPreset('¿Dónde botan las carpetas y los clips?')" class="bg-sky-100 hover:bg-sky-200 text-sky-800 text-[11px] font-bold px-3 py-1.5 rounded-full whitespace-nowrap shadow-sm border border-sky-300">
+                        📁 Carpetas y clips
+                    </button>
+                    <button onclick="askPreset('¿Dónde tiro la caja de pizza engrasada?')" class="bg-slate-100 hover:bg-slate-200 text-slate-800 text-[11px] font-bold px-3 py-1.5 rounded-full whitespace-nowrap shadow-sm border border-slate-300">
+                        🍕 Caja de pizza sucia
+                    </button>
+                    <button onclick="askPreset('¿Dónde depósito las cáscaras de huevo?')" class="bg-emerald-100 hover:bg-emerald-200 text-emerald-800 text-[11px] font-bold px-3 py-1.5 rounded-full whitespace-nowrap shadow-sm border border-emerald-300">
+                        🥚 Cáscaras de huevo
+                    </button>
+                    <button onclick="askPreset('¿Qué hago con las pilas usadas?')" class="bg-amber-100 hover:bg-amber-200 text-amber-800 text-[11px] font-bold px-3 py-1.5 rounded-full whitespace-nowrap shadow-sm border border-amber-300">
+                        🔋 Pilas usadas
+                    </button>
+                </div>
+
+                <div class="flex space-x-2">
+                    <input type="text" id="chat-input" placeholder="Pregunta por cualquier residuo..." class="flex-1 bg-white px-3 py-2.5 rounded-xl text-xs font-medium text-slate-800 border-2 border-indigo-200 focus:outline-none focus:border-indigo-500 shadow-sm">
+                    <button onclick="sendChatMessage()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow flex items-center justify-center">
+                        <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- VISTA CREADORAS DEL JUEGO -->
+            <div id="view-creators" class="view-screen hidden p-4 flex-col space-y-4">
+                <div class="text-center">
+                    <span class="bg-pink-100 text-pink-800 text-[11px] font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-sm">
+                        I.E. Mallama - Nariño
+                    </span>
+                    <h3 class="text-2xl font-black text-white drop-shadow-md mt-2">
+                        Creadoras del Juego 🌟
+                    </h3>
+                    <p class="text-xs text-white/90">
+                        Equipo pedagógico y ambiental comprometido con la Economía Circular y la Biorremediación.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 gap-2.5">
+                    
+                    <div class="bg-white/95 backdrop-blur p-3 rounded-2xl shadow-md border-l-4 border-pink-500 flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-pink-100 rounded-full flex items-center justify-center text-pink-600 font-bold text-lg shrink-0">
+                            👩‍🎓
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-slate-800 text-sm">Madelyn Rodriguez</h4>
+                            <p class="text-[11px] text-slate-600 font-medium">Líder de Diseño & Estrategia Eco-Pedagógica</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white/95 backdrop-blur p-3 rounded-2xl shadow-md border-l-4 border-purple-500 flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 font-bold text-lg shrink-0">
+                            👩‍🔬
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-slate-800 text-sm">Diana Muñoz</h4>
+                            <p class="text-[11px] text-slate-600 font-medium">Coordinadora de Contenidos & Residuos</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white/95 backdrop-blur p-3 rounded-2xl shadow-md border-l-4 border-emerald-500 flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600 font-bold text-lg shrink-0">
+                            🌱
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-slate-800 text-sm">Mayerly Bisbicus</h4>
+                            <p class="text-[11px] text-slate-600 font-medium">Especialista en Fitorremediación y Huerta</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white/95 backdrop-blur p-3 rounded-2xl shadow-md border-l-4 border-amber-500 flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center text-amber-600 font-bold text-lg shrink-0">
+                            ⭐
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-slate-800 text-sm">Liszeth Ordoñez</h4>
+                            <p class="text-[11px] text-slate-600 font-medium">Promotora de Reciclaje y Posconsumo</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white/95 backdrop-blur p-3 rounded-2xl shadow-md border-l-4 border-sky-500 flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-sky-100 rounded-full flex items-center justify-center text-sky-600 font-bold text-lg shrink-0">
+                            🎨
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-slate-800 text-sm">Sofia Erazo</h4>
+                            <p class="text-[11px] text-slate-600 font-medium">Ilustradora & Creativa Institucional</p>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="bg-indigo-900/60 backdrop-blur text-white p-3 rounded-2xl text-center text-xs space-y-1 border border-white/20">
+                    <p class="font-bold text-amber-300">¡Gracias por jugar y cuidar nuestra Institución Educativa Mallama!</p>
+                    <p class="text-[10px] text-slate-200">Mallama, Nariño, Colombia 🇨🇴</p>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Navegación Inferior -->
+        <div class="bg-white border-t border-slate-200 p-2 px-2 flex justify-around items-center z-20 rounded-t-2xl shadow-lg">
+            <button onclick="switchView('home')" id="nav-home" class="nav-btn flex flex-col items-center text-emerald-600 font-bold text-[9px]">
+                <i class="fa-solid fa-house text-base"></i>
+                <span>Inicio</span>
+            </button>
+            <button onclick="switchView('game')" id="nav-game" class="nav-btn flex flex-col items-center text-slate-400 font-bold text-[9px] hover:text-emerald-600">
+                <i class="fa-solid fa-gamepad text-base"></i>
+                <span>Juego</span>
+            </button>
+            <button onclick="switchView('guide')" id="nav-guide" class="nav-btn flex flex-col items-center text-slate-400 font-bold text-[9px] hover:text-emerald-600">
+                <i class="fa-solid fa-book-open text-base"></i>
+                <span>Canecas</span>
+            </button>
+            <button onclick="switchView('ai')" id="nav-ai" class="nav-btn flex flex-col items-center text-slate-400 font-bold text-[9px] hover:text-emerald-600">
+                <i class="fa-solid fa-robot text-base"></i>
+                <span>Profe IA</span>
+            </button>
+            <button onclick="switchView('creators')" id="nav-creators" class="nav-btn flex flex-col items-center text-slate-400 font-bold text-[9px] hover:text-emerald-600">
+                <i class="fa-solid fa-users text-base"></i>
+                <span>Creadoras</span>
+            </button>
+        </div>
+
+    </div>
+
+    <script>
+        /* Estado General */
+        const state = {
+            currentView: 'home',
+            score: 0,
+            soundEnabled: true,
+            game: {
+                active: false,
+                timer: 60,
+                timerInterval: null,
+                currentItem: null,
+                itemsProcessed: 0,
+                targetItems: 10,
+                remainingPool: []
+            }
+        };
+
+        /* Sistema de Sonido (Web Audio API) */
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+
+        function playSound(type) {
+            if (!state.soundEnabled) return;
+            try {
+                if (!audioCtx) audioCtx = new AudioCtx();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                const now = audioCtx.currentTime;
+
+                if (type === 'success') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(523.25, now);
+                    osc.frequency.exponentialRampToValueAtTime(880, now + 0.2);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                    osc.start(now);
+                    osc.stop(now + 0.2);
+                } else if (type === 'error') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(220, now);
+                    osc.frequency.linearRampToValueAtTime(110, now + 0.35);
+                    gain.gain.setValueAtTime(0.35, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+                    osc.start(now);
+                    osc.stop(now + 0.35);
+                } else if (type === 'click') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(440, now);
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+                    osc.start(now);
+                    osc.stop(now + 0.05);
+                }
+            } catch (e) {
+                console.log("Audio no activado aún");
+            }
+        }
+
+        function toggleAudio() {
+            state.soundEnabled = !state.soundEnabled;
+            const icon = document.getElementById('sound-icon');
+            if (state.soundEnabled) {
+                icon.className = 'fa-solid fa-volume-high';
+                playSound('click');
+            } else {
+                icon.className = 'fa-solid fa-volume-xmark';
+            }
+        }
+
+        /* Navegación Vistas */
+        function switchView(viewName) {
+            playSound('click');
+            state.currentView = viewName;
+
+            document.querySelectorAll('.view-screen').forEach(el => el.classList.add('hidden'));
+            const targetView = document.getElementById(`view-${viewName}`);
+            if (targetView) targetView.classList.remove('hidden');
+
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('text-emerald-600');
+                btn.classList.add('text-slate-400');
+            });
+            const activeNav = document.getElementById(`nav-${viewName}`);
+            if (activeNav) {
+                activeNav.classList.remove('text-slate-400');
+                activeNav.classList.add('text-emerald-600');
+            }
+
+            if (viewName === 'game') {
+                startGame();
+            } else {
+                stopGame();
+            }
+        }
+
+        function addScore(pts) {
+            state.score += pts;
+            document.getElementById('score-display').innerText = state.score;
+        }
+
+        /* Mascotas Canvas Animado */
+        function initHeroCanvas() {
+            const canvas = document.getElementById('hero-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            let frame = 0;
+
+            function animateHero() {
+                frame++;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                const cx = canvas.width / 2;
+                const cy = canvas.height / 2 + Math.sin(frame * 0.05) * 5;
+
+                ctx.beginPath();
+                ctx.arc(cx, cy, 45, 0, Math.PI * 2);
+                ctx.fillStyle = '#10b981';
+                ctx.fill();
+                ctx.lineWidth = 4;
+                ctx.strokeStyle = '#047857';
+                ctx.stroke();
+
+                const eyeOffset = Math.sin(frame * 0.03) * 2;
+                
+                ctx.beginPath();
+                ctx.arc(cx - 15, cy - 10, 12, 0, Math.PI * 2);
+                ctx.fillStyle = '#ffffff';
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(cx - 15 + eyeOffset, cy - 10, 5, 0, Math.PI * 2);
+                ctx.fillStyle = '#1e293b';
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.arc(cx + 15, cy - 10, 12, 0, Math.PI * 2);
+                ctx.fillStyle = '#ffffff';
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(cx + 15 + eyeOffset, cy - 10, 5, 0, Math.PI * 2);
+                ctx.fillStyle = '#1e293b';
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.arc(cx, cy + 8, 18, 0.1 * Math.PI, 0.9 * Math.PI, false);
+                ctx.lineWidth = 4;
+                ctx.strokeStyle = '#064e3b';
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.ellipse(cx, cy - 48, 8, 16, Math.PI / 4, 0, Math.PI * 2);
+                ctx.fillStyle = '#a3e635';
+                ctx.fill();
+
+                requestAnimationFrame(animateHero);
+            }
+            animateHero();
+        }
+
+        /* Amplia Lista de Residuos Únicos */
+        const gameItemsMaster = [
+            // BLANCO (Aprovechables Limpios)
+            { name: 'Carpeta / Folder', type: 'blanco', icon: '📁', color: '#0284c7' },
+            { name: 'Grapas y Clips', type: 'blanco', icon: '📎', color: '#64748b' },
+            { name: 'Tapas Plásticas', type: 'blanco', icon: '🔴', color: '#ef4444' },
+            { name: 'Lápiz de Madera', type: 'blanco', icon: '✏️', color: '#f59e0b' },
+            { name: 'Botella Vidrio Limpia', type: 'blanco', icon: '🍾', color: '#10b981' },
+            { name: 'Lata de Metal Seca', type: 'blanco', icon: '🥫', color: '#94a3b8' },
+            { name: 'Cuaderno / Hoja Seca', type: 'blanco', icon: '📄', color: '#38bdf8' },
+            { name: 'Caja Cartón Limpia', type: 'blanco', icon: '📦', color: '#d97706' },
+            { name: 'Cable Eléctrico Viejo', type: 'blanco', icon: '🔌', color: '#6366f1' },
+            { name: 'Disco CD / DVD', type: 'blanco', icon: '💿', color: '#818cf8' },
+
+            // VERDE (Orgánicos Aprovechables)
+            { name: 'Contenedor Blanco Kawaii', type: 'blanco', icon: '🗑️', color: '#0284c7' },
+            { name: 'Cáscara de Banano', type: 'verde', icon: '🍌', color: '#eab308' },
+            { name: 'Cáscara de Huevo', type: 'verde', icon: '🥚', color: '#fde047' },
+            { name: 'Bolsa de Infusión / Té', type: 'verde', icon: '☕', color: '#84cc16' },
+            { name: 'Restos de Café', type: 'verde', icon: '🫖', color: '#78350f' },
+            { name: 'Semillas de Fruta', type: 'verde', icon: '🌱', color: '#22c55e' },
+            { name: 'Pasto y Hojas Secas', type: 'verde', icon: '🍃', color: '#16a34a' },
+            { name: 'Manzana Comida', type: 'verde', icon: '🍎', color: '#dc2626' },
+
+            // NEGRO (No Aprovechables)
+            { name: 'Servilleta Usada', type: 'negro', icon: '🧻', color: '#64748b' },
+            { name: 'Mezclador de Café', type: 'negro', icon: '🥢', color: '#475569' },
+            { name: 'Caja Pizza Engrasada', type: 'negro', icon: '🍕', color: '#ea580c' },
+            { name: 'Empaque de Mecato', type: 'negro', icon: '🍿', color: '#f97316' },
+            { name: 'Vaso de Icopor', type: 'negro', icon: '🍧', color: '#334155' },
+            { name: 'Esfero Plástico Usado', type: 'negro', icon: '🖊️', color: '#1e293b' },
+            { name: 'Residuo de Baño', type: 'negro', icon: '🗑️', color: '#0f172a' },
+            { name: 'Colilla de Cigarrillo', type: 'negro', icon: '🚬', color: '#525252' }
+        ];
+
+        let canvasGame, ctxGame;
+        let isDragging = false;
+        let dragOffset = { x: 0, y: 0 };
+
+        /* Algoritmo de Mezcla (Fisher-Yates) para no repetir elementos */
+        function shuffleArray(array) {
+            const arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        function startGame() {
+            state.game.active = true;
+            state.game.timer = 60;
+            state.game.itemsProcessed = 0;
+            state.game.targetItems = 10;
+            
+            // Crear pool sin repetición
+            state.game.remainingPool = shuffleArray(gameItemsMaster);
+
+            document.getElementById('game-timer').innerText = `${state.game.timer}s`;
+            document.getElementById('game-score').innerText = `0/${state.game.targetItems}`;
+            
+            clearInterval(state.game.timerInterval);
+            state.game.timerInterval = setInterval(() => {
+                if (!state.game.active) return;
+                state.game.timer--;
+                document.getElementById('game-timer').innerText = `${state.game.timer}s`;
+
+                if (state.game.timer <= 0) {
+                    endGame(false, "¡Se acabó el tiempo! Revisa la guía para responder más rápido.");
+                }
+            }, 1000);
+
+            initGameCanvas();
+            spawnNewItem();
+        }
+
+        function stopGame() {
+            state.game.active = false;
+            clearInterval(state.game.timerInterval);
+        }
+
+        function initGameCanvas() {
+            canvasGame = document.getElementById('game-canvas');
+            if (!canvasGame) return;
+
+            const rect = canvasGame.getBoundingClientRect();
+            canvasGame.width = rect.width;
+            canvasGame.height = rect.height;
+
+            ctxGame = canvasGame.getContext('2d');
+
+            canvasGame.onmousedown = handlePointerStart;
+            canvasGame.onmousemove = handlePointerMove;
+            canvasGame.onmouseup = handlePointerEnd;
+
+            canvasGame.ontouchstart = (e) => handlePointerStart(e.touches[0]);
+            canvasGame.ontouchmove = (e) => handlePointerMove(e.touches[0]);
+            canvasGame.ontouchend = handlePointerEnd;
+
+            requestAnimationFrame(renderGameLoop);
+        }
+
+        function spawnNewItem() {
+            if (state.game.remainingPool.length === 0) {
+                // Reabastecer sin repetir si exceden el límite
+                state.game.remainingPool = shuffleArray(gameItemsMaster);
+            }
+
+            // Extrae el siguiente elemento único del pool
+            const nextItemData = state.game.remainingPool.pop();
+            const cw = canvasGame.width;
+            const ch = canvasGame.height;
+
+            state.game.currentItem = {
+                ...nextItemData,
+                x: cw / 2,
+                y: ch * 0.28,
+                radius: 35
+            };
+        }
+
+        function getBinsPositions() {
+            const cw = canvasGame.width;
+            const ch = canvasGame.height;
+            const binW = cw / 3.4;
+            const binH = ch * 0.28;
+            const binY = ch - binH - 12;
+
+            return [
+                { type: 'blanco', label: 'BLANCO', sub: 'Aprovechable', x: cw * 0.04, y: binY, w: binW, h: binH, color: '#ffffff', textColor: '#0f172a' },
+                { type: 'verde', label: 'VERDE', sub: 'Orgánico', x: cw * 0.35, y: binY, w: binW, h: binH, color: '#22c55e', textColor: '#ffffff' },
+                { type: 'negro', label: 'NEGRO', sub: 'No Aprov.', x: cw * 0.66, y: binY, w: binW, h: binH, color: '#1e293b', textColor: '#ffffff' }
+            ];
+        }
+
+        function renderGameLoop() {
+            if (!ctxGame || !canvasGame) return;
+
+            ctxGame.clearRect(0, 0, canvasGame.width, canvasGame.height);
+
+            // Fondo ilustrado
+            ctxGame.fillStyle = '#e0f2fe';
+            ctxGame.fillRect(0, 0, canvasGame.width, canvasGame.height);
+
+            // Dibujar Canecas
+            const bins = getBinsPositions();
+            bins.forEach(bin => {
+                ctxGame.fillStyle = 'rgba(0, 0, 0, 0.12)';
+                ctxGame.beginPath();
+                ctxGame.roundRect(bin.x + 4, bin.y + 4, bin.w, bin.h, 12);
+                ctxGame.fill();
+
+                ctxGame.fillStyle = bin.color;
+                ctxGame.beginPath();
+                ctxGame.roundRect(bin.x, bin.y, bin.w, bin.h, 12);
+                ctxGame.fill();
+                ctxGame.lineWidth = 3;
+                ctxGame.strokeStyle = '#94a3b8';
+                ctxGame.stroke();
+
+                ctxGame.fillStyle = bin.textColor;
+                ctxGame.font = 'bold 12px Fredoka, sans-serif';
+                ctxGame.textAlign = 'center';
+                ctxGame.fillText(bin.label, bin.x + bin.w / 2, bin.y + 24);
+
+                ctxGame.font = '9px Fredoka, sans-serif';
+                ctxGame.fillText(bin.sub, bin.x + bin.w / 2, bin.y + 38);
+
+                ctxGame.font = '20px sans-serif';
+                ctxGame.fillText('♻️', bin.x + bin.w / 2, bin.y + bin.h - 14);
+            });
+
+            // Objeto en juego
+            const item = state.game.currentItem;
+            if (item) {
+                ctxGame.save();
+                ctxGame.shadowColor = 'rgba(0, 0, 0, 0.2)';
+                ctxGame.shadowBlur = 8;
+                ctxGame.shadowOffsetY = 4;
+
+                ctxGame.beginPath();
+                ctxGame.arc(item.x, item.y, item.radius, 0, Math.PI * 2);
+                ctxGame.fillStyle = '#ffffff';
+                ctxGame.fill();
+                ctxGame.lineWidth = 3;
+                ctxGame.strokeStyle = item.color;
+                ctxGame.stroke();
+
+                ctxGame.font = '28px sans-serif';
+                ctxGame.textAlign = 'center';
+                ctxGame.textBaseline = 'middle';
+                ctxGame.fillText(item.icon, item.x, item.y);
+
+                ctxGame.restore();
+
+                ctxGame.fillStyle = '#0f172a';
+                ctxGame.font = 'bold 11px Fredoka, sans-serif';
+                ctxGame.textAlign = 'center';
+                ctxGame.fillText(item.name, item.x, item.y - item.radius - 8);
+            }
+
+            if (state.game.active) {
+                requestAnimationFrame(renderGameLoop);
+            }
+        }
+
+        function handlePointerStart(evt) {
+            if (!state.game.currentItem) return;
+
+            const rect = canvasGame.getBoundingClientRect();
+            const pointerX = evt.clientX - rect.left;
+            const pointerY = evt.clientY - rect.top;
+
+            const item = state.game.currentItem;
+            const dist = Math.hypot(pointerX - item.x, pointerY - item.y);
+
+            if (dist < item.radius + 15) {
+                isDragging = true;
+                dragOffset.x = pointerX - item.x;
+                dragOffset.y = pointerY - item.y;
+            }
+        }
+
+        function handlePointerMove(evt) {
+            if (!isDragging || !state.game.currentItem) return;
+
+            const rect = canvasGame.getBoundingClientRect();
+            state.game.currentItem.x = evt.clientX - rect.left - dragOffset.x;
+            state.game.currentItem.y = evt.clientY - rect.top - dragOffset.y;
+        }
+
+        function handlePointerEnd() {
+            if (!isDragging || !state.game.currentItem) return;
+            isDragging = false;
+
+            const item = state.game.currentItem;
+            const bins = getBinsPositions();
+
+            let matchedBin = null;
+            bins.forEach(bin => {
+                if (
+                    item.x > bin.x &&
+                    item.x < bin.x + bin.w &&
+                    item.y > bin.y &&
+                    item.y < bin.y + bin.h
+                ) {
+                    matchedBin = bin;
+                }
+            });
+
+            if (matchedBin) {
+                if (matchedBin.type === item.type) {
+                    playSound('success');
+                    showFeedback('¡CORRECTO! 🌟', 'bg-emerald-500');
+                    addScore(10);
+                    state.game.itemsProcessed++;
+                    document.getElementById('game-score').innerText = `${state.game.itemsProcessed}/${state.game.targetItems}`;
+
+                    if (state.game.itemsProcessed >= state.game.targetItems) {
+                        endGame(true, "¡Increíble! Lograste clasificar 10 residuos sin cometer ningún error. 🎉");
+                    } else {
+                        spawnNewItem();
+                    }
+                } else {
+                    // ¡ERROR! Reiniciar juego inmediatamente
+                    playSound('error');
+                    showFeedback('¡INCORRECTO! REINICIANDO...', 'bg-rose-600');
+                    setTimeout(() => {
+                        alert(`❌ Te equivocaste al clasificar "${item.name}".\n\nEl juego se REINICIA para que vuelvas a intentar lograr la racha perfecta.`);
+                        startGame(); // Reinicia el juego inmediatamente
+                    }, 400);
+                }
+            } else {
+                item.x = canvasGame.width / 2;
+                item.y = canvasGame.height * 0.28;
+            }
+        }
+
+        function showFeedback(text, bgColorClass) {
+            const feedbackEl = document.getElementById('game-feedback');
+            const textEl = document.getElementById('feedback-text');
+
+            textEl.innerText = text;
+            textEl.className = `text-lg sm:text-xl font-black text-white px-4 py-2 rounded-2xl shadow-2xl ${bgColorClass}`;
+            feedbackEl.classList.remove('opacity-0');
+
+            setTimeout(() => {
+                feedbackEl.classList.add('opacity-0');
+            }, 800);
+        }
+
+        function endGame(won, message) {
+            stopGame();
+            if (won) {
+                playSound('success');
+                alert(message + "\n\nGanaste +50 puntos de bonificación.");
+                addScore(50);
+                switchView('home');
+            } else {
+                playSound('error');
+                alert(message);
+                switchView('home');
+            }
+        }
+
+        /* Lógica del Bot Tutor Ambiental */
+        async function sendChatMessage() {
+            const inputEl = document.getElementById('chat-input');
+            const query = inputEl.value.trim();
+            if (!query) return;
+
+            inputEl.value = '';
+            appendChatMessage('user', query);
+
+            const loadingId = appendChatMessage('bot', 'Consultando con el Profe Eco-Bot... 🌿');
+
+            try {
+                const systemPrompt = "Eres 'Profe Eco-Bot', un profesor ambiental amable de la I.E. Mallama en Nariño. Explica dónde va cada residuo según la norma de Colombia (Blanco: aprovechables como carpetas, botellas, latas, clips, cartón seco; Verde: orgánicos compostables como cáscaras de fruta, huevo, restos de café, yerba, pasto; Negro: no aprovechables como servilletas usadas, icopor, papel engrasado, mezcladores, colillas; Posconsumo: pilas en 'Pilas con el Ambiente', medicamentos vencidos en 'Punto Azul'). Responde en máximo 3 oraciones claras para estudiantes.";
+                
+                const apiKey = "";
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: query }] }],
+                        systemInstruction: { parts: [{ text: systemPrompt }] }
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error("Respuesta no válida del servidor o restricciones de origen local.");
+                }
+
+                const data = await response.json();
+                const botReply = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                if (botReply) {
+                    updateChatMessage(loadingId, botReply);
+                } else {
+                    throw new Error("Formato de respuesta vacío");
+                }
+
+                playSound('success');
+
+            } catch (err) {
+                // FALLBACK OFFLINE INTELIGENTE: Si falla la red o la API (ej. archivo abierto localmente)
+                console.warn("Modo asistente sin conexión activado:", err);
+                const localResponse = generateLocalEcoBotAnswer(query);
+                updateChatMessage(loadingId, localResponse);
+                playSound('success');
+            }
+        }
+
+        /* Generador local de respuestas por palabras clave (Garantiza funcionamiento en cualquier dispositivo) */
+        function generateLocalEcoBotAnswer(userQuery) {
+            const text = userQuery.toLowerCase();
+
+            if (text.includes('pila') || text.includes('bateria') || text.includes('batería')) {
+                return "🔋 Las pilas y baterías usadas no van a las canecas comunes. Debes depositarlas en el contenedor especial de 'Pilas con el Ambiente' o en una botella plástica seca.";
+            }
+            if (text.includes('medicamento') || text.includes('pastilla') || text.includes('jarabe')) {
+                return "💊 Los medicamentos vencidos o incompletos pertenecen al programa 'Punto Azul'. Nunca los arrojes a la caneca ni al sifón.";
+            }
+            if (text.includes('carpeta') || text.includes('clip') || text.includes('grap') || text.includes('papel') || text.includes('carton') || text.includes('cartón') || text.includes('botella') || text.includes('lata') || text.includes('vidrio') || text.includes('cuaderno') || text.includes('plastico') || text.includes('plástico')) {
+                return "⚪ ¡Va en la CANECA BLANCA! Es un residuo aprovechable. Recuerda que debe estar completamente limpio y seco para poder reciclarlo.";
+            }
+            if (text.includes('cascara') || text.includes('cáscara') || text.includes('fruta') || text.includes('huevo') || text.includes('cafe') || text.includes('café') || text.includes('comida') || text.includes('pasto') || text.includes('hoja') || text.includes('banano') || text.includes('manzana')) {
+                return "🌱 ¡Va en la CANECA VERDE! Son residuos orgánicos aprovechables ideales para elaborar abono y compostaje en la huerta escolar de Mallama.";
+            }
+            if (text.includes('servilleta') || text.includes('icopor') || text.includes('pizza') || text.includes('sucio') || text.includes('grasa') || text.includes('baño') || text.includes('higienico') || text.includes('higiénico') || text.includes('mecato') || text.includes('paquete') || text.includes('colilla') || text.includes('esfero')) {
+                return "🖤 ¡Va en la CANECA NEGRA! Son residuos no aprovechables (o contaminados con grasa/sucios). Van directamente al destino de disposición final.";
+            }
+
+            return "🌿 Para clasificar correctamente en la I.E. Mallama: utiliza la CANECA BLANCA para secos y reciclables, la CANECA VERDE para restos orgánicos de alimentos y la CANECA NEGRA para servilletas o empaques sucios.";
+        }
+
+        function askPreset(promptText) {
+            const inputEl = document.getElementById('chat-input');
+            if (inputEl) {
+                inputEl.value = promptText;
+                sendChatMessage();
+            }
+        }
+
+        function appendChatMessage(sender, text) {
+            const history = document.getElementById('chat-history');
+            if (!history) return null;
+
+            const msgId = 'msg-' + Date.now();
+            const isUser = sender === 'user';
+
+            const container = document.createElement('div');
+            container.className = `flex items-start space-x-2 ${isUser ? 'flex-row-reverse space-x-reverse' : ''}`;
+            container.id = msgId;
+
+            const avatar = document.createElement('div');
+            avatar.className = `w-7 h-7 ${isUser ? 'bg-amber-500' : 'bg-indigo-600'} text-white rounded-full flex items-center justify-center text-xs shrink-0 mt-1 shadow-sm`;
+            avatar.innerText = isUser ? '👧' : '🤖';
+
+            const bubble = document.createElement('div');
+            bubble.className = `${isUser ? 'bg-amber-400 text-amber-950 rounded-tr-none' : 'bg-white text-slate-800 rounded-tl-none'} p-3 rounded-2xl shadow-sm max-w-[85%] font-medium leading-relaxed`;
+            bubble.innerText = text;
+
+            container.appendChild(avatar);
+            container.appendChild(bubble);
+            history.appendChild(container);
+
+            history.scrollTop = history.scrollHeight;
+            return msgId;
+        }
+
+        function updateChatMessage(msgId, newText) {
+            const container = document.getElementById(msgId);
+            if (container) {
+                const bubble = container.querySelector('div:nth-child(2)');
+                if (bubble) {
+                    bubble.innerText = newText;
+                    const history = document.getElementById('chat-history');
+                    if (history) history.scrollTop = history.scrollHeight;
+                }
+            }
+        }
+
+        /* Inicialización al cargar la ventana */
+        window.onload = function () {
+            initHeroCanvas();
+            // Asegurar que la vista inicial sea Home
+            switchView('home');
+        };
+    </script>
+</body>
+</html>
